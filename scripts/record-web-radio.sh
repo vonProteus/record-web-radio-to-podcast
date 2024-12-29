@@ -14,7 +14,6 @@ ffmpeg -i "$WRURL" \
    FFMPEG_EXIT_CODE=$?
 
 ffprobe -show_format -show_streams "$RECORDING" -v quiet -of json > "$RECORDING.json"
-jq . "$RECORDING.json"
 
 TITLE=$(jq -r ".format.tags.\"icy-description\"" "$RECORDING.json")
 UPLOADER=$(jq -r ".format.tags.\"icy-name\"" "$RECORDING.json")
@@ -23,7 +22,7 @@ DURATION=$(jq -r ".streams[]|select(.codec_name == \"mp3\").duration" "$RECORDIN
 BITRATE=$(($(jq -r ".streams[]|select(.codec_name == \"mp3\").bit_rate" "$RECORDING.json") / 1024))
 FREQUENCY=$(jq -r ".streams[]|select(.codec_name == \"mp3\").sample_rate" "$RECORDING.json")
 
-NEWFILENAME="$DATE-$TITLE"
+NEWFILENAME="$DATE-$(echo ${TITLE} | sed 's/\W/_/g')-$(cat /proc/sys/kernel/random/uuid)"
 cp "$RECORDING" "$NEWFILENAME.mp3"
 
 cp /scripts/template.xml "${NEWFILENAME}.xml"
