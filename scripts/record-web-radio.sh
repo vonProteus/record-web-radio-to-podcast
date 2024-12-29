@@ -4,7 +4,6 @@ TMP_DIR="$(mktemp -d)"
 DATE=$(date +"%Y-%m-%d")
 
 RECORDING="$TMP_DIR/$DATE-out.mp3"
-
 START_DATE=$(date +"%Y-%m-%d %H:%M:%S")
 ffmpeg -i "$WRURL" \
    -t "$RECORD_TIME_IN_SECONDS" \
@@ -49,7 +48,8 @@ xmlstarlet ed -L -u "/PodcastGenerator/episode/fileInfoPG/duration" --value "$DU
 xmlstarlet ed -L -u "/PodcastGenerator/episode/fileInfoPG/bitrate" --value "$BITRATE" "${NEWFILENAME}.xml"
 xmlstarlet ed -L -u "/PodcastGenerator/episode/fileInfoPG/frequency" --value "$FREQUENCY" "${NEWFILENAME}.xml"
 
-
+sed -i 's/#CDATASTART#/\<\!\[CDATA\[/g' "${NEWFILENAME}.xml"
+sed -i 's/#CDATAEND#/\]\]\>/g' "${NEWFILENAME}.xml"
 
 mkdir -p "${PGAPPDATA}/media" "${PGAPPDATA}/images"
 cp -p "$NEWFILENAME.mp3" "${PGAPPDATA}/media"
