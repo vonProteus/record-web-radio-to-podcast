@@ -3,15 +3,16 @@
 TMP_DIR="$(mktemp -d)"
 DATE=$(date +"%Y-%m-%d")
 
-
 RECORDING="$TMP_DIR/$DATE-out.mp3"
 
+START_DATE=$(date +"%Y-%m-%d %H:%M:%S")
 ffmpeg -i "$WRURL" \
    -t "$RECORD_TIME_IN_SECONDS" \
    $FFMPEGOPTIONS \
    -c copy \
    "$RECORDING" ||
    FFMPEG_EXIT_CODE=$?
+END_DATE=$(date +"%Y-%m-%d %H:%M:%S")
 
 ffprobe -show_format -show_streams "$RECORDING" -v quiet -of json > "$RECORDING.json"
 
@@ -21,6 +22,12 @@ SIZE=$(echo "scale=2; $(jq -r ".format.size" "$RECORDING.json") / 1024.0 / 1024.
 DURATION=$(jq -r ".streams[]|select(.codec_name == \"mp3\").duration" "$RECORDING.json")
 BITRATE=$(($(jq -r ".streams[]|select(.codec_name == \"mp3\").bit_rate" "$RECORDING.json") / 1024))
 FREQUENCY=$(jq -r ".streams[]|select(.codec_name == \"mp3\").sample_rate" "$RECORDING.json")
+
+FULL="Start Date: $START_DATE
+End date: $END_DATE
+
+$(jq ".format.tags" "$RECORDING.json")"
+SHORT=${FULL:0:200}
 
 NEWFILENAME="$DATE-$(echo ${TITLE} | sed 's/\W/_/g')-$(cat /proc/sys/kernel/random/uuid)"
 cp "$RECORDING" "$NEWFILENAME.mp3"
